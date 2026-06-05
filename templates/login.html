@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Nexacare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0e1117; --surface: #161b25; --surface2: #1e2535;
+    --border: #2a3348; --accent: #3b82f6; --danger: #ef4444;
+    --text: #e2e8f0; --muted: #64748b;
+  }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background-image: radial-gradient(ellipse at 20% 50%, rgba(59,130,246,.06) 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 20%, rgba(16,185,129,.04) 0%, transparent 60%);
+  }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 44px 40px; width: 100%; max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .login-logo .icon { font-size: 36px; display: block; margin-bottom: 12px; color: var(--accent); }
+  .login-logo h1 {
+    font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400;
+    color: var(--accent);
+  }
+  .login-logo p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+  .form-group input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); padding: 10px 14px;
+    font-family: inherit; font-size: 14px; outline: none; transition: border-color .15s;
+  }
+  .form-group input:focus { border-color: var(--accent); }
+
+  .login-btn {
+    width: 100%; padding: 11px; background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; font-family: inherit; font-size: 14px;
+    font-weight: 600; cursor: pointer; transition: filter .15s; margin-top: 8px;
+  }
+  .login-btn:hover { filter: brightness(1.15); }
+
+  .flash-list { list-style: none; margin-bottom: 16px; }
+  .flash-item { padding: 10px 14px; border-radius: 6px; font-size: 13px; }
+  .flash-error { background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3); color: #fca5a5; }
+
+
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="login-logo">
+    <i class="fa-solid fa-hospital icon"></i>
+    <h1>Nexacare</h1>
+    <p>Healthcare Management Portal</p>
+  </div>
+
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+  {% if msgs %}
+  <ul class="flash-list">
+    {% for cat, msg in msgs %}
+    <li class="flash-item flash-{{ cat }}">{{ msg }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endwith %}
+
+  <form method="post" action="{{ url_for('login') }}">
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" name="username" placeholder="Enter your username" autofocus required>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Enter your password" required>
+    </div>
+    <button type="submit" class="login-btn">Sign In</button>
+  </form>
+
+
+</div>
+</body>
+</html>

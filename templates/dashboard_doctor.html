@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}My Schedule{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Dr. {{ doctor.full_name if doctor else session.username }}</h1>
+  <p>{{ doctor.specialty }}{% if doctor.department %} · {{ doctor.department }}{% endif %}</p>
+</div>
+
+<!-- Stats -->
+<div class="grid-4" style="margin-bottom:20px;">
+  <div class="card stat">
+    <div class="stat-val">{{ appointments | length }}</div>
+    <div class="stat-label">Total Assigned</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-val" style="color:var(--warn)">{{ today | length }}</div>
+    <div class="stat-label">Today</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-val" style="color:var(--accent2)">{{ upcoming | length }}</div>
+    <div class="stat-label">Upcoming</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-val" style="color:#c4b5fd">
+      {{ appointments | selectattr("status","eq","completed") | list | length }}
+    </div>
+    <div class="stat-label">Completed</div>
+  </div>
+</div>
+
+<!-- Today's patients -->
+{% if today %}
+<div class="card">
+  <div class="card-title">Today's Patients <span class="today-badge">{{ today | length }}</span></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>Time</th><th>Patient</th><th>Blood</th><th>Reason</th><th>Status</th><th>Update</th></tr>
+      </thead>
+      <tbody>
+        {% for a in today %}
+        <tr>
+          <td class="mono">{{ a.appointment_at.strftime('%H:%M') }}</td>
+          <td>
+            <div style="font-weight:500;">{{ a.patient_name }}</div>
+            <div style="font-size:11px; color:var(--muted);">{{ a.patient_phone or '' }}</div>
+          </td>
+          <td style="font-weight:600; color:var(--danger);">{{ a.blood_type or '—' }}</td>
+          <td>{{ a.reason or '—' }}</td>
+          <td><span class="pill pill-{{ a.status }}">{{ a.status.replace('_',' ') }}</span></td>
+          <td>
+            <form method="post" action="{{ url_for('doctor_update_status', appt_id=a.id) }}" style="display:flex; gap:6px; align-items:center;">
+              <select name="status" style="background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:4px 8px; font-size:12px;">
+                {% for s in ['scheduled','completed','cancelled','no_show'] %}
+                <option value="{{ s }}" {% if a.status==s %}selected{% endif %}>{{ s.replace('_',' ') }}</option>
+                {% endfor %}
+              </select>
+              <input type="text" name="notes" placeholder="Notes" value="{{ a.notes or '' }}"
+                     style="background:var(--surface2); border:1px solid var(--border); color:var(--text);
+                            border-radius:4px; padding:4px 8px; font-size:12px; width:140px;">
+              <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Upcoming -->
+{% if upcoming %}
+<div class="card">
+  <div class="card-title">Upcoming Appointments</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>Date &amp; Time</th><th>Patient</th><th>Gender</th><th>Blood</th><th>Reason</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for a in upcoming %}
+        {% if not today or a.appointment_at.date() != today[0].appointment_at.date() %}
+        <tr>
+          <td class="mono">{{ a.appointment_at.strftime('%d %b %Y, %H:%M') }}</td>
+          <td style="font-weight:500;">{{ a.patient_name }}</td>
+          <td style="text-transform:capitalize; color:var(--muted);">{{ a.gender or '—' }}</td>
+          <td style="font-weight:600; color:var(--danger);">{{ a.blood_type or '—' }}</td>
+          <td>{{ a.reason or '—' }}</td>
+          <td><span class="pill pill-{{ a.status }}">{{ a.status }}</span></td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Full history -->
+<div class="card">
+  <div class="card-title">All Appointments</div>
+  {% if appointments %}
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>Date &amp; Time</th><th>Patient</th><th>Reason</th><th>Status</th><th>Notes</th><th>Update</th></tr>
+      </thead>
+      <tbody>
+        {% for a in appointments %}
+        <tr>
+          <td class="mono">{{ a.appointment_at.strftime('%d %b %Y, %H:%M') }}</td>
+          <td>
+            <div style="font-weight:500;">{{ a.patient_name }}</div>
+            <div style="font-size:11px; color:var(--muted);">{{ a.gender or '' }} {% if a.blood_type %}&nbsp;·&nbsp;<span style="color:var(--danger); font-weight:600;">{{ a.blood_type }}</span>{% endif %}</div>
+          </td>
+          <td>{{ a.reason or '—' }}</td>
+          <td><span class="pill pill-{{ a.status }}">{{ a.status.replace('_',' ') }}</span></td>
+          <td style="color:var(--muted); font-size:12px; max-width:200px;">{{ a.notes or '—' }}</td>
+          <td>
+            <form method="post" action="{{ url_for('doctor_update_status', appt_id=a.id) }}" style="display:flex; gap:6px;">
+              <select name="status" onchange="this.form.submit()"
+                      style="background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:3px 6px; font-size:11px;">
+                {% for s in ['scheduled','completed','cancelled','no_show'] %}
+                <option value="{{ s }}" {% if a.status==s %}selected{% endif %}>{{ s.replace('_',' ') }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">📅</div>
+    <p>No appointments assigned yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

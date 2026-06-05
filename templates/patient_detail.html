@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% set active_tab = "patients" %}
+{% block title %}{{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('patients') }}" class="back-link">← Back to Patients</a>
+
+<div class="page-header">
+  <h1>{{ patient.full_name }}</h1>
+  <p>Patient #{{ patient.id }} · Admitted {{ patient.created_at.strftime('%d %b %Y') }}</p>
+</div>
+
+<div class="grid-2">
+  <!-- Demographics -->
+  <div class="card">
+    <div class="card-title">Patient Details</div>
+    <table style="width:100%">
+      <tbody>
+        <tr><td style="color:var(--muted); width:40%; padding:7px 0; font-size:12px;">Date of Birth</td>
+            <td>{{ patient.date_of_birth.strftime('%d %b %Y') if patient.date_of_birth else '—' }}</td></tr>
+        <tr><td style="color:var(--muted); padding:7px 0; font-size:12px;">Gender</td>
+            <td style="text-transform:capitalize">{{ patient.gender or '—' }}</td></tr>
+        <tr><td style="color:var(--muted); padding:7px 0; font-size:12px;">Blood Type</td>
+            <td style="font-weight:600; color:var(--danger)">{{ patient.blood_type or '—' }}</td></tr>
+        <tr><td style="color:var(--muted); padding:7px 0; font-size:12px;">Phone</td>
+            <td class="mono">{{ patient.phone or '—' }}</td></tr>
+        <tr><td style="color:var(--muted); padding:7px 0; font-size:12px;">Email</td>
+            <td>{{ patient.email or '—' }}</td></tr>
+        <tr><td style="color:var(--muted); padding:7px 0; font-size:12px;">Address</td>
+            <td>{{ patient.address or '—' }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Quick stats -->
+  <div class="card">
+    <div class="card-title">Visit Summary</div>
+    {% set total_v = history | length %}
+    {% set completed_v = history | selectattr("status","eq","completed") | list | length %}
+    <div style="display:flex; gap:24px; margin-top:8px;">
+      <div>
+        <div class="stat-val">{{ total_v }}</div>
+        <div class="stat-label">Total Visits</div>
+      </div>
+      <div>
+        <div class="stat-val" style="color:var(--accent2)">{{ completed_v }}</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div>
+        <div class="stat-val" style="color:var(--warn)">{{ total_v - completed_v }}</div>
+        <div class="stat-label">Pending / Other</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Visit history -->
+<div class="card">
+  <div class="card-title">Visit History</div>
+  {% if history %}
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date &amp; Time</th>
+          <th>Doctor</th>
+          <th>Specialty</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in history %}
+        <tr>
+          <td class="mono">{{ h.appointment_at.strftime('%d %b %Y, %H:%M') }}</td>
+          <td>{{ h.doctor }}</td>
+          <td style="color:var(--muted); font-size:12px;">{{ h.specialty }}</td>
+          <td>{{ h.reason or '—' }}</td>
+          <td><span class="pill pill-{{ h.status }}">{{ h.status.replace('_',' ') }}</span></td>
+          <td style="color:var(--muted); font-size:12px;">{{ h.notes or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">📋</div>
+    <p>No visit history for this patient.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

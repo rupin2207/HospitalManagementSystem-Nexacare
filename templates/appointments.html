@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% set active_tab = "appointments" %}
+{% block title %}Appointments{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Appointments</h1>
+  <p>Schedule, track and manage all patient appointments.</p>
+</div>
+
+<!-- Stats row -->
+{% set total   = appointments | length %}
+{% set sched   = appointments | selectattr("status","eq","scheduled")  | list | length %}
+{% set done    = appointments | selectattr("status","eq","completed")  | list | length %}
+{% set today_n = today | length %}
+
+<div class="grid-3" style="margin-bottom:20px;">
+  <div class="card stat">
+    <div class="stat-val">{{ total }}</div>
+    <div class="stat-label">Total Appointments</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-val" style="color:var(--accent2)">{{ sched }}</div>
+    <div class="stat-label">Scheduled</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-val" style="color:var(--warn)">{{ today_n }}</div>
+    <div class="stat-label">Today's Schedule</div>
+  </div>
+</div>
+
+<!-- Book new appointment -->
+<div class="card">
+  <div class="card-title">Book New Appointment</div>
+  <form method="post" action="{{ url_for('add_appointment') }}">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Patient *</label>
+        <select name="patient_id" required>
+          <option value="">— select patient —</option>
+          {% for p in patients %}
+          <option value="{{ p.id }}">{{ p.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Doctor *</label>
+        <select name="doctor_id" required>
+          <option value="">— select doctor —</option>
+          {% for d in doctors %}
+          <option value="{{ d.id }}">{{ d.full_name }} — {{ d.specialty }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date &amp; Time *</label>
+        <input type="datetime-local" name="appointment_at" required>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select name="status">
+          <option value="scheduled">Scheduled</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="no_show">No Show</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:10px;">
+      <div class="form-group" style="flex:2">
+        <label>Reason</label>
+        <input type="text" name="reason" placeholder="Chief complaint / reason for visit">
+      </div>
+      <div class="form-group" style="flex:2">
+        <label>Notes</label>
+        <input type="text" name="notes" placeholder="Internal notes (optional)">
+      </div>
+      <div class="form-group" style="flex:none; align-self:flex-end;">
+        <button type="submit" class="btn btn-primary">Book Appointment</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Today's schedule -->
+{% if today %}
+<div class="card">
+  <div class="card-title">Today's Schedule <span class="today-badge">{{ today | length }} appt{% if today|length != 1 %}s{% endif %}</span></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Patient</th>
+          <th>Doctor</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in today %}
+        <tr>
+          <td class="mono">{{ row.appointment_at.strftime('%H:%M') }}</td>
+          <td>{{ row.patient }}</td>
+          <td>{{ row.doctor }}</td>
+          <td><span class="pill pill-{{ row.status }}">{{ row.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- All appointments -->
+<div class="card">
+  <div class="card-title">All Appointments</div>
+  {% if appointments %}
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date &amp; Time</th>
+          <th>Patient</th>
+          <th>Doctor</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in appointments %}
+        <tr>
+          <td class="mono">{{ a.id }}</td>
+          <td class="mono">{{ a.appointment_at.strftime('%d %b %Y, %H:%M') }}</td>
+          <td><a href="{{ url_for('patient_detail', pid=a.patient_id) }}" style="color:var(--accent); text-decoration:none;">{{ a.patient_name }}</a></td>
+          <td>
+            {{ a.doctor_name }}
+            <div style="color:var(--muted); font-size:11px;">{{ a.specialty }}</div>
+          </td>
+          <td>{{ a.reason or '—' }}</td>
+          <td>
+            <form method="post" action="{{ url_for('update_status', appt_id=a.id) }}" class="inline-form">
+              <select name="status" onchange="this.form.submit()">
+                {% for s in ['scheduled','completed','cancelled','no_show'] %}
+                <option value="{{ s }}" {% if a.status == s %}selected{% endif %}>{{ s.replace('_',' ') }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </td>
+          <td>
+            <form method="post" action="{{ url_for('delete_appointment', appt_id=a.id) }}" class="inline-form"
+                  onsubmit="return confirm('Delete this appointment?')">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">📅</div>
+    <p>No appointments yet. Book one above.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

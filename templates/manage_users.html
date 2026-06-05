@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% set active_tab = "users" %}
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>User Management</h1>
+  <p>Create logins and assign them to doctors or patients.</p>
+</div>
+
+<!-- Stats -->
+<div class="grid-3" style="margin-bottom:20px;">
+  <div class="card stat">
+    <div class="stat-val">{{ users | length }}</div>
+    <div class="stat-label">Total Users</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-val" style="color:#67e8f9">{{ users | selectattr("role","eq","doctor") | list | length }}</div>
+    <div class="stat-label">Doctors</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-val" style="color:#6ee7b7">{{ users | selectattr("role","eq","patient") | list | length }}</div>
+    <div class="stat-label">Patients</div>
+  </div>
+</div>
+
+<!-- Add user form -->
+<div class="card">
+  <div class="card-title">Create New Login</div>
+  <form method="post" action="{{ url_for('add_user') }}">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Username *</label>
+        <input type="text" name="username" placeholder="e.g. dr.smith" required>
+      </div>
+      <div class="form-group">
+        <label>Password *</label>
+        <input type="password" name="password" placeholder="Min 6 characters" required>
+      </div>
+      <div class="form-group">
+        <label>Role *</label>
+        <select name="role" id="roleSelect" onchange="updateLinkedOptions()" required>
+          <option value="">— select role —</option>
+          <option value="admin">Admin</option>
+          <option value="doctor">Doctor</option>
+          <option value="patient">Patient</option>
+        </select>
+      </div>
+      <div class="form-group" id="linkedGroup">
+        <label>Link to</label>
+        <select name="linked_id" id="linkedSelect">
+          <option value="">— select role first —</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:none; align-self:flex-end;">
+        <button type="submit" class="btn btn-primary">Create User</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Users table -->
+<div class="card">
+  <div class="card-title">All Users</div>
+  {% if users %}
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Username</th><th>Role</th><th>Linked To (ID)</th><th>Created</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="mono">{{ u.id }}</td>
+          <td style="font-weight:500;">{{ u.username }}</td>
+          <td><span class="role-badge role-{{ u.role }}">{{ u.role }}</span></td>
+          <td class="mono" style="color:var(--muted);">
+            {% if u.linked_id %}ID {{ u.linked_id }}{% else %}—{% endif %}
+          </td>
+          <td class="mono" style="color:var(--muted);font-size:11px;">{{ u.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            {% if u.id != session.user_id %}
+            <form method="post" action="{{ url_for('delete_user', uid=u.id) }}" class="inline-form"
+                  onsubmit="return confirm('Delete user {{ u.username }}?')">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+            {% else %}
+            <span style="font-size:11px;color:var(--muted);">Current session</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">👤</div>
+    <p>No users yet.</p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+const doctors  = {{ doctors_list  | tojson }};
+const patients = {{ patients_list | tojson }};
+
+function updateLinkedOptions() {
+  const role = document.getElementById('roleSelect').value;
+  const sel  = document.getElementById('linkedSelect');
+  sel.innerHTML = '<option value="">— none —</option>';
+  const list = role === 'doctor' ? doctors : role === 'patient' ? patients : [];
+  list.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.id;
+    opt.textContent = item.full_name;
+    sel.appendChild(opt);
+  });
+}
+</script>
+{% endblock %}

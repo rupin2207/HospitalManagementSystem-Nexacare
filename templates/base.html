@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Nexacare{% endblock %} — Patient Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0e1117; --surface: #161b25; --surface2: #1e2535;
+    --border: #2a3348; --accent: #3b82f6; --accent2: #10b981;
+    --warn: #f59e0b; --danger: #ef4444;
+    --text: #e2e8f0; --muted: #64748b;
+    --radius: 10px; --shadow: 0 4px 24px rgba(0,0,0,.4);
+  }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; min-height:100vh; }
+
+  /* TOPBAR */
+  .topbar {
+    background:var(--surface); border-bottom:1px solid var(--border);
+    padding:0 32px; display:flex; align-items:center; gap:32px;
+    height:60px; position:sticky; top:0; z-index:100;
+  }
+  .brand { font-family:'DM Serif Display',serif; font-size:20px; color:var(--accent); letter-spacing:.5px; text-decoration:none; white-space:nowrap; }
+  .brand span { color:var(--text); }
+  .tabs { display:flex; gap:4px; flex:1; }
+  .tab-link { font-size:13px; font-weight:500; color:var(--muted); text-decoration:none; padding:6px 16px; border-radius:6px; transition:background .15s,color .15s; }
+  .tab-link:hover  { background:var(--surface2); color:var(--text); }
+  .tab-link.active { background:var(--accent); color:#fff; }
+  .topbar-right { display:flex; align-items:center; gap:12px; margin-left:auto; white-space:nowrap; }
+  .user-info { font-size:13px; color:var(--muted); }
+  .role-badge { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; padding:3px 10px; border-radius:20px; }
+  .role-admin   { background:rgba(124,58,237,.2); color:#c4b5fd; }
+  .role-doctor  { background:rgba(8,145,178,.2);  color:#67e8f9; }
+  .role-patient { background:rgba(6,95,70,.2);    color:#6ee7b7; }
+  .logout-btn { font-size:12px; color:var(--muted); text-decoration:none; padding:5px 12px; border:1px solid var(--border); border-radius:6px; transition:all .15s; }
+  .logout-btn:hover { background:var(--danger); border-color:var(--danger); color:#fff; }
+
+  /* PAGE */
+  .page { max-width:1200px; margin:0 auto; padding:32px 24px; }
+  .page-header { margin-bottom:28px; }
+  .page-header h1 { font-family:'DM Serif Display',serif; font-size:28px; font-weight:400; }
+  .page-header p { color:var(--muted); margin-top:4px; font-size:13px; }
+
+  /* CARDS */
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); margin-bottom:20px; }
+  .card-title { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:18px; }
+
+  /* GRID */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+  @media(max-width:800px) { .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; } }
+
+  /* STATS */
+  .stat { padding:20px; }
+  .stat-val { font-family:'DM Serif Display',serif; font-size:36px; line-height:1; color:var(--accent); }
+  .stat-label { color:var(--muted); font-size:11px; margin-top:6px; text-transform:uppercase; letter-spacing:.06em; }
+
+  /* FORMS */
+  .form-row { display:flex; flex-wrap:wrap; gap:12px; }
+  .form-group { display:flex; flex-direction:column; gap:5px; flex:1; min-width:160px; }
+  .form-group label { font-size:12px; font-weight:500; color:var(--muted); }
+  .form-group input, .form-group select, .form-group textarea {
+    background:var(--surface2); border:1px solid var(--border); border-radius:6px;
+    color:var(--text); padding:8px 12px; font-family:inherit; font-size:13px;
+    outline:none; transition:border-color .15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--accent); }
+  .form-group select option { background:var(--surface2); }
+  .form-group textarea { resize:vertical; min-height:72px; }
+
+  /* BUTTONS */
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 18px; border-radius:6px; border:none; font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:filter .15s; text-decoration:none; white-space:nowrap; }
+  .btn:hover { filter:brightness(1.15); }
+  .btn-primary { background:var(--accent);  color:#fff; }
+  .btn-success { background:var(--accent2); color:#fff; }
+  .btn-warn    { background:var(--warn);    color:#000; }
+  .btn-danger  { background:var(--danger);  color:#fff; }
+  .btn-ghost   { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+  .btn-sm      { padding:4px 10px; font-size:12px; }
+
+  /* TABLE */
+  .tbl-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; }
+  td { padding:11px 14px; border-bottom:1px solid rgba(42,51,72,.5); font-size:13px; vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(59,130,246,.04); }
+
+  /* PILLS */
+  .pill { display:inline-block; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+  .pill-scheduled { background:rgba(29,78,216,.25);  color:#93c5fd; }
+  .pill-completed { background:rgba(6,95,70,.25);    color:#6ee7b7; }
+  .pill-cancelled { background:rgba(127,29,29,.25);  color:#fca5a5; }
+  .pill-no_show   { background:rgba(120,53,15,.25);  color:#fcd34d; }
+
+  /* FLASH */
+  .flash-list { list-style:none; margin-bottom:20px; }
+  .flash-item { padding:10px 16px; border-radius:6px; font-size:13px; margin-bottom:8px; }
+  .flash-success { background:rgba(16,185,129,.15); border:1px solid rgba(16,185,129,.3); color:#6ee7b7; }
+  .flash-error   { background:rgba(239,68,68,.15);  border:1px solid rgba(239,68,68,.3);  color:#fca5a5; }
+
+  /* MISC */
+  .empty { text-align:center; padding:48px 24px; color:var(--muted); }
+  .empty-icon { font-size:36px; margin-bottom:12px; }
+  .mono { font-family:'JetBrains Mono',monospace; font-size:12px; }
+  .inline-form { display:inline; }
+  .inline-form select { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:3px 6px; font-size:11px; }
+  .back-link { display:inline-flex; align-items:center; gap:6px; color:var(--muted); text-decoration:none; font-size:13px; margin-bottom:20px; }
+  .back-link:hover { color:var(--text); }
+  .today-badge { display:inline-block; padding:2px 8px; background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.3); color:#fcd34d; border-radius:4px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+  .divider { border:none; border-top:1px solid var(--border); margin:20px 0; }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="brand" href="/dashboard"><i class="fa-solid fa-hospital"></i> Nexacare</a>
+
+  {% if session.get('role') == 'admin' %}
+  <div class="tabs">
+    <a href="{{ url_for('appointments') }}" class="tab-link {% if active_tab=='appointments' %}active{% endif %}">Appointments</a>
+    <a href="{{ url_for('patients') }}"     class="tab-link {% if active_tab=='patients'     %}active{% endif %}">Patients</a>
+    <a href="{{ url_for('doctors') }}"      class="tab-link {% if active_tab=='doctors'      %}active{% endif %}">Doctors &amp; Staff</a>
+    <a href="{{ url_for('manage_users') }}" class="tab-link {% if active_tab=='users'        %}active{% endif %}">Users</a>
+  </div>
+  {% elif session.get('role') == 'doctor' %}
+  <div class="tabs">
+    <a href="{{ url_for('doctor_dashboard') }}" class="tab-link active">My Schedule</a>
+  </div>
+  {% elif session.get('role') == 'patient' %}
+  <div class="tabs">
+    <a href="{{ url_for('patient_dashboard') }}" class="tab-link active">My Appointments</a>
+  </div>
+  {% endif %}
+
+  <div class="topbar-right">
+    {% if session.get('username') %}
+      <span class="user-info">{{ session.username }}</span>
+      <span class="role-badge role-{{ session.role }}">{{ session.role }}</span>
+      <a href="{{ url_for('logout') }}" class="logout-btn">Log out</a>
+    {% endif %}
+  </div>
+</nav>
+
+<main class="page">
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+  {% if msgs %}
+  <ul class="flash-list">
+    {% for cat, msg in msgs %}
+    <li class="flash-item flash-{{ cat }}">{{ msg }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+
+</body>
+</html>

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% set active_tab = "doctors" %}
+{% block title %}Doctors &amp; Staff{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Doctors &amp; Staff</h1>
+  <p>Manage medical staff and track their appointment workloads.</p>
+</div>
+
+<!-- Stats -->
+<div class="grid-3" style="margin-bottom:20px;">
+  <div class="card stat">
+    <div class="stat-val">{{ doctors | length }}</div>
+    <div class="stat-label">Total Doctors</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-val" style="color:var(--accent2)">{{ doctors | map(attribute='total_appointments') | sum }}</div>
+    <div class="stat-label">Total Appointments</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-val" style="color:var(--warn)">
+      {{ (doctors | map(attribute='total_appointments') | sum / doctors | length) | round(1) if doctors else 0 }}
+    </div>
+    <div class="stat-label">Avg per Doctor</div>
+  </div>
+</div>
+
+<!-- Add doctor form -->
+<div class="card">
+  <div class="card-title">Add New Doctor / Staff</div>
+  <form method="post" action="{{ url_for('add_doctor') }}">
+    <div class="form-row">
+      <div class="form-group" style="flex:2">
+        <label>Full Name *</label>
+        <input type="text" name="full_name" placeholder="Dr. Jane Doe" required>
+      </div>
+      <div class="form-group">
+        <label>Specialty *</label>
+        <input type="text" name="specialty" placeholder="e.g. Cardiology" required>
+      </div>
+      <div class="form-group">
+        <label>Department</label>
+        <input type="text" name="department" placeholder="e.g. ICU">
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:10px;">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="doctor@hospital.com">
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" name="phone" placeholder="555-0000">
+      </div>
+      <div class="form-group" style="flex:none; align-self:flex-end;">
+        <button type="submit" class="btn btn-primary">Add Doctor</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Workload chart bar -->
+{% if doctors %}
+<div class="card">
+  <div class="card-title">Appointment Workload</div>
+  {% set max_appts = doctors | map(attribute='total_appointments') | max %}
+  {% for d in doctors %}
+  <div style="margin-bottom:14px;">
+    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
+      <span>{{ d.full_name }}</span>
+      <span class="mono" style="color:var(--muted)">{{ d.total_appointments }} appts</span>
+    </div>
+    <div style="height:8px; background:var(--surface2); border-radius:4px; overflow:hidden;">
+      <div style="height:100%; width:{{ ((d.total_appointments / max_appts) * 100) | int if max_appts > 0 else 0 }}%;
+                  background:var(--accent); border-radius:4px; transition:width .3s;"></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Staff table -->
+<div class="card">
+  <div class="card-title">Staff Directory</div>
+  {% if doctors %}
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Specialty</th>
+          <th>Department</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Appts</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in doctors %}
+        <tr>
+          <td class="mono">{{ d.id }}</td>
+          <td style="font-weight:500;">{{ d.full_name }}</td>
+          <td>{{ d.specialty }}</td>
+          <td style="color:var(--muted);">{{ d.department or '—' }}</td>
+          <td class="mono">{{ d.phone or '—' }}</td>
+          <td style="color:var(--muted);">{{ d.email or '—' }}</td>
+          <td>
+            <span style="font-family:'JetBrains Mono',monospace; font-weight:600;
+                         color:{% if d.total_appointments >= 3 %}var(--warn){% elif d.total_appointments > 0 %}var(--accent2){% else %}var(--muted){% endif %}">
+              {{ d.total_appointments }}
+            </span>
+          </td>
+          <td class="mono" style="color:var(--muted); font-size:11px;">{{ d.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <form method="post" action="{{ url_for('delete_doctor', did=d.id) }}" class="inline-form"
+                  onsubmit="return confirm('Remove {{ d.full_name }}? All their appointments will be deleted.')">
+              <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">👨‍⚕️</div>
+    <p>No doctors added yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

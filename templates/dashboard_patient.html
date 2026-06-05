@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}My Appointments{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ patient.full_name if patient else session.username }}</h1>
+  <p>Your appointments and visit history.</p>
+</div>
+
+<!-- Stats -->
+<div class="grid-3" style="margin-bottom:20px;">
+  <div class="card stat">
+    <div class="stat-val">{{ history | length }}</div>
+    <div class="stat-label">Total Visits</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-val" style="color:var(--accent2)">{{ upcoming | length }}</div>
+    <div class="stat-label">Upcoming</div>
+  </div>
+  <div class="card stat">
+    <div class="stat-val" style="color:#c4b5fd">
+      {{ history | selectattr("status","eq","completed") | list | length }}
+    </div>
+    <div class="stat-label">Completed</div>
+  </div>
+</div>
+
+<!-- Patient info card -->
+{% if patient %}
+<div class="card">
+  <div class="card-title">Your Details</div>
+  <div style="display:flex; gap:40px; flex-wrap:wrap;">
+    <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">DATE OF BIRTH</div><div>{{ patient.date_of_birth.strftime('%d %b %Y') if patient.date_of_birth else '—' }}</div></div>
+    <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">BLOOD TYPE</div><div style="font-weight:600;color:var(--danger);">{{ patient.blood_type or '—' }}</div></div>
+    <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">PHONE</div><div class="mono">{{ patient.phone or '—' }}</div></div>
+    <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">EMAIL</div><div>{{ patient.email or '—' }}</div></div>
+    <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">ADDRESS</div><div>{{ patient.address or '—' }}</div></div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Upcoming -->
+{% if upcoming %}
+<div class="card">
+  <div class="card-title">Upcoming Appointments <span class="today-badge">{{ upcoming | length }}</span></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>Date &amp; Time</th><th>Doctor</th><th>Specialty</th><th>Reason</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for a in upcoming %}
+        <tr>
+          <td class="mono">{{ a.appointment_at.strftime('%d %b %Y, %H:%M') }}</td>
+          <td style="font-weight:500;">{{ a.doctor_name }}</td>
+          <td style="color:var(--muted);">{{ a.specialty }}</td>
+          <td>{{ a.reason or '—' }}</td>
+          <td><span class="pill pill-{{ a.status }}">{{ a.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Full history -->
+<div class="card">
+  <div class="card-title">Visit History</div>
+  {% if history %}
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>Date &amp; Time</th><th>Doctor</th><th>Specialty</th><th>Reason</th><th>Status</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        {% for h in history %}
+        <tr>
+          <td class="mono">{{ h.appointment_at.strftime('%d %b %Y, %H:%M') }}</td>
+          <td>
+            <div style="font-weight:500;">{{ h.doctor_name }}</div>
+            <div style="font-size:11px;color:var(--muted);">{{ h.doctor_phone or '' }}</div>
+          </td>
+          <td style="color:var(--muted);font-size:12px;">{{ h.specialty }}</td>
+          <td>{{ h.reason or '—' }}</td>
+          <td><span class="pill pill-{{ h.status }}">{{ h.status.replace('_',' ') }}</span></td>
+          <td style="color:var(--muted);font-size:12px;">{{ h.notes or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">📋</div>
+    <p>No appointments on record yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
