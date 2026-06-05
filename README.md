@@ -153,17 +153,3 @@ hms/
 - `SECRET_KEY` should be set via environment variable before any production deployment
 - Default credentials (`admin123`, `doctor123`, `patient123`) must be changed after first login in any non-local environment
 
----
-
-## Default Credentials (Development Only)
-
-| Role | Username | Password |
-|---|---|---|
-| Admin | `admin` | `admin123` |
-| Doctor | `dr.alice` | `doctor123` |
-| Patient | `john.smith` | `patient123` |
-
----
-
-## License
-MIT
