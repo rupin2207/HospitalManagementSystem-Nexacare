@@ -47,6 +47,18 @@ Three distinct roles — each sees only what they need:
 - Complete visit history with doctor, specialty, reason, status, and notes
 - Personal health details (blood type, DOB, contact)
 
+## Observability & Production Patterns
+
+This project implements production-grade logging and error handling:
+
+- **Structured Logging**: Python `logging` module with `RotatingFileHandler` 
+  (1MB rotation, 3 backups). Log levels: DEBUG → INFO → WARNING → ERROR → CRITICAL
+- **Retry Logic**: DB connections retry 3 times with exponential backoff (2s, 4s) 
+  before failing permanently
+- **Dead Letter Queue**: Failed DB operations are written to `failed_operations.csv` 
+  for inspection and reprocessing
+- **Audit Trail**: All login attempts (success/failure), admin actions, 
+  and unauthorized access attempts are logged with timestamp and IP
 ---
 
 ## Database Schema
